@@ -1,0 +1,318 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* Tailwind CSS 基础样式 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义CSS变量 */
+:root {
+    --brand-dark: #0A0F1E;
+    --brand-dark-secondary: #10162A;
+    --brand-light: #E0E6F1;
+    --brand-cyan: #22d3ee;
+    --brand-magenta: #d946ef;
+    --brand-gray: #94a3b8;
+}
+
+/* 基础样式 */
+@layer base {
+    body {
+        background-color: var(--brand-dark);
+        background-image: url('https://r2.flowith.net/files/png/X5ED9-ai_tech_abstract_background_index_2@1024x1024.png');
+        background-attachment: fixed;
+        background-size: cover;
+        font-family: 'Inter', sans-serif;
+    }
+}
+
+.bg-brand-dark { background-color: var(--brand-dark); }
+.text-brand-light { color: var(--brand-light); }
+.text-cyan-400 { color: var(--brand-cyan); }
+.text-magenta-400 { color: var(--brand-magenta); }
+
+.article-card {
+    background-color: var(--brand-dark-secondary);
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(34, 211, 238, 0.1);
+}
+
+.article-card-tag {
+    background-color: rgba(217, 70, 239, 0.1);
+    color: var(--brand-magenta);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+}
+
+.article-card-tag.dev {
+    background-color: rgba(34, 211, 238, 0.1);
+    color: var(--brand-cyan);
+    border: 1px solid rgba(34, 211, 238, 0.3);
+}
+
+.article-tag {
+    display: inline-block;
+    background-color: #1e293b;
+    color: #94a3b8;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid #334155;
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+}
+
+.article-tag:hover {
+    background-color: #334155;
+    color: var(--brand-light);
+}
+
+/* Article Page Typography */
+.prose-custom {
+    color: var(--brand-light);
+}
+.prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4, .prose-custom h5, .prose-custom h6 {
+    color: white;
+}
+.prose-custom a {
+    color: var(--brand-cyan);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.prose-custom a:hover {
+    color: #67e8f9;
+}
+.prose-custom strong {
+    color: white;
+}
+.prose-custom blockquote {
+    border-left-color: var(--brand-cyan);
+    color: var(--brand-gray);
+}
+.prose-custom :not(pre) > code {
+    color: var(--brand-magenta);
+    background-color: rgba(217, 70, 239, 0.1);
+    padding: 0.2em 0.4em;
+    margin: 0;
+    font-size: 85%;
+    border-radius: 3px;
+}
+.prose-custom pre {
+    border: 1px solid #1e293b;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.875em;
+    line-height: 1.75;
+    background: transparent;
+}
+.prose-custom pre code {
+    background-color: transparent;
+    color: inherit;
+    padding: 0;
+    margin: 0;
+    font-size: inherit;
+    border-radius: 0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* 导航栏移动端优化 */
+    nav .flex.items-center.space-x-6 {
+        flex-wrap: nowrap;
+        gap: 0;
+    }
+    
+    nav .flex.items-center.space-x-6 > * {
+        margin: 0;
+    }
+    
+    /* 移动端菜单样式 */
+    #mobile-menu {
+        backdrop-filter: blur(10px);
+        background-color: rgba(10, 15, 30, 0.95);
+    }
+    
+    #mobile-menu a {
+        border-radius: 0.5rem;
+        margin: 0.125rem 0;
+    }
+    
+    #mobile-menu a:hover {
+        transform: translateX(4px);
+    }
+    
+    /* 移动端用户下拉菜单 */
+    .group:hover .absolute {
+        position: fixed !important;
+        right: 1rem;
+        left: 1rem;
+        width: auto;
+    }
+    
+    .article-card {
+        margin-bottom: 1rem;
+    }
+    
+    .prose-custom {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    
+    .prose-custom h1, .prose-custom h2, .prose-custom h3 {
+        font-size: 1.5rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .prose-custom pre {
+        font-size: 0.8rem;
+        padding: 0.75rem;
+        overflow-x: auto;
+    }
+    
+    .comment-thread {
+        margin-left: 0;
+    }
+    
+    .replies-container {
+        margin-left: 1rem !important;
+    }
+    
+    .message-toast {
+        right: 1rem;
+        left: 1rem;
+        transform: translateY(-100%);
+    }
+    
+    .message-toast.show {
+        transform: translateY(0);
+    }
+}
+
+/* 改进的滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--brand-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--brand-cyan);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #67e8f9;
+}
+
+/* 改进的表单样式 */
+input:focus, textarea:focus, select:focus {
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
+}
+
+/* 改进的按钮悬停效果 */
+button:hover, .article-card:hover {
+    transform: translateY(-2px);
+}
+
+/* 改进的加载状态 */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--brand-cyan);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 改进的标签样式 */
+.tag-filter-btn.active {
+    background-color: var(--brand-cyan);
+    color: white;
+    border-color: var(--brand-cyan);
+}
+
+/* 改进的评论样式 */
+.comment-content {
+    position: relative;
+}
+
+.comment-content::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--brand-cyan), var(--brand-magenta));
+    border-radius: 1px;
+}
+
+/* 改进的响应式网格 */
+@media (max-width: 640px) {
+    .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (min-width: 1025px) {
+    .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+}
