@@ -182,8 +182,8 @@ const Home = () => {
                       </span>
                     ))}
                   </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 text-sm text-gray-500 mb-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-700/50">
+                        <div className="flex items-center space-x-2 text-sm text-gray-500">
                           <User className="w-4 h-4" />
                           <span>{article.author}</span>
                           <Calendar className="w-4 h-4" />
@@ -191,7 +191,7 @@ const Home = () => {
                         </div>
                         <Link 
                           to={`/article/${article.id}`}
-                          className="text-cyan-400 hover:text-cyan-300 font-medium text-sm flex items-center"
+                          className="text-cyan-400 hover:text-cyan-300 font-medium text-sm flex items-center self-start sm:self-auto"
                         >
                           Read More
                           <ChevronRight className="ml-1 h-4 w-4" />

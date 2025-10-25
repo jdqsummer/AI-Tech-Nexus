@@ -191,7 +191,32 @@ AI-Tech-Nexus/
 
 ## 部署
 
-应用可以部署到任何支持静态文件托管的服务，如 Vercel、Netlify 或 GitHub Pages。
+应用可以部署到任何支持静态文件托管的服务，如 Vercel、Netlify、GitHub Pages 或 Zeabur。
+
+### 部署到 Zeabur
+
+1. 将项目推送到 GitHub 仓库
+2. 在 [Zeabur](https://zeabur.com) 上导入项目
+3. 确保项目根目录包含 `zeabur.json` 配置文件
+4. 设置环境变量：
+   ```
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+5. 部署！
+
+### 跨平台部署注意事项
+
+本项目在Windows环境下开发和测试，但在Linux环境中部署时可能会遇到兼容性问题：
+
+1. 确保所有npm脚本使用跨平台兼容的语法
+2. 避免在脚本中使用Windows特定的命令或路径分隔符
+3. 在部署平台上明确指定Node.js版本（推荐使用LTS版本）
+
+如果遇到构建错误（如错误代码127："命令未找到"），请检查：
+1. 构建命令是否正确（`npm run build`）
+2. 是否所有依赖都已正确安装
+3. 是否存在平台特定的代码或配置
 
 ### 部署到 Vercel
 
