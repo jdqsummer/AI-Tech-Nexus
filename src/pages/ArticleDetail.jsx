@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { Calendar, User, Tag, ClipboardEdit, ArrowLeft } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { Calendar, User, Tag, ClipboardEdit, ArrowLeft, Trash2 } from 'lucide-react'
 import { supabase } from '../../supabase-config'
+import Modal from '../components/Modal'
 
 const ArticleDetail = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [article, setArticle] = useState(null)
   const [comments, setComments] = useState([])
   const [newComment, setNewComment] = useState('')
   const [currentUser, setCurrentUser] = useState(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
   useEffect(() => {
     // 加载文章数据（分层存储架构）
@@ -22,6 +25,51 @@ const ArticleDetail = () => {
     const user = JSON.parse(localStorage.getItem('currentUser'))
     setCurrentUser(user)
   }, [id])
+
+  // 在文章内容更新后调用Prism.js进行代码高亮
+  useEffect(() => {
+    if (window.Prism && window.Prism.highlightAll) {
+      try {
+        // 延迟执行以确保DOM已更新
+        setTimeout(() => {
+          // 为所有代码块添加行号类
+          const codeBlocks = document.querySelectorAll('pre code');
+          codeBlocks.forEach(block => {
+            block.classList.add('line-numbers');
+          });
+          
+          // 执行代码高亮
+          window.Prism.highlightAll();
+        }, 100);
+      } catch (error) {
+        console.warn('Prism.js highlighting failed:', error);
+      }
+    }
+  }, [article]);
+
+  // 在文章内容渲染后再次执行Prism.js高亮，确保高亮正确应用
+  useEffect(() => {
+    if (article && window.Prism && window.Prism.highlightAll) {
+      try {
+        // 使用requestAnimationFrame确保DOM已更新
+        const highlightCode = () => {
+          // 为所有代码块添加行号类
+          const codeBlocks = document.querySelectorAll('pre code');
+          codeBlocks.forEach(block => {
+            block.classList.add('line-numbers');
+          });
+          
+          // 执行代码高亮
+          window.Prism.highlightAll();
+        };
+        
+        // 在DOM更新后执行高亮
+        requestAnimationFrame(highlightCode);
+      } catch (error) {
+        console.warn('Prism.js highlighting failed:', error);
+      }
+    }
+  }, [article]);
 
   // 加载文章数据（分层存储架构）
   const loadArticle = async () => {
@@ -66,6 +114,7 @@ const ArticleDetail = () => {
     if (!newComment.trim() || !currentUser) return
 
     const comment = {
+      id: Date.now() + Math.random(), // 生成唯一ID
       article_id: article.id,
       content: newComment,
       user_id: currentUser.id,
@@ -107,6 +156,45 @@ const ArticleDetail = () => {
     }
   }
 
+  // 处理删除文章
+  const handleDelete = async () => {
+    if (!currentUser || currentUser.id !== article.author_id) {
+      alert('您没有权限删除这篇文章')
+      return
+    }
+
+    // 打开确认删除弹窗
+    setIsDeleteModalOpen(true)
+  }
+
+  // 确认删除文章
+  const confirmDelete = async () => {
+    try {
+      // 关闭弹窗
+      setIsDeleteModalOpen(false)
+      
+      // 从Supabase删除文章
+      const { error } = await supabase
+        .from('articles')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+      
+      // 从localStorage中移除文章
+      const storedArticles = JSON.parse(localStorage.getItem('articles') || '[]')
+      const updatedArticles = storedArticles.filter(a => a.id != id)
+      localStorage.setItem('articles', JSON.stringify(updatedArticles))
+      
+      // 显示删除成功消息并导航到文章列表页
+      alert('文章已成功删除')
+      navigate('/articles')
+    } catch (err) {
+      console.error('Error deleting article:', err)
+      alert('删除文章失败: ' + err.message)
+    }
+  }
+
   if (!article) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -119,9 +207,21 @@ const ArticleDetail = () => {
       </div>
     )
   }
-
+  console.warn('Del Article:', article)
+  console.warn('Del Current User:', currentUser)
   return (
     <div className="min-h-screen bg-brand-dark pattern-grid pattern-cyan-400 pattern-bg-brand-dark pattern-opacity-10 pattern-size-20 bg-[length:40px_40px] py-4 sm:py-8">
+      {/* 删除确认弹窗 */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="确认删除"
+        confirmText="删除"
+        cancelText="取消"
+      >
+        <p>确定要删除这篇文章吗？此操作不可恢复。</p>
+      </Modal>
       <div className="container mx-auto px-6 max-w-4xl">
         {/* 返回按钮 */}
         <div className="mb-6">
@@ -147,21 +247,21 @@ const ArticleDetail = () => {
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-magenta-400 bg-clip-text text-transparent">
                 {article.title}
               </h1>
-              {currentUser && currentUser.id === article.authorId && (
+              {currentUser && currentUser.id === article.author_id && (
                 <div className="flex gap-2">
                   <Link
                     to={`/edit-article/${article.id}`}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                   >
                     <ClipboardEdit className="w-4 h-4" />
-                    编辑文章
+                    Edit
                   </Link>
                   <button
                     onClick={handleDelete}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    删除文章
+                    Delete
                   </button>
                 </div>
               )}

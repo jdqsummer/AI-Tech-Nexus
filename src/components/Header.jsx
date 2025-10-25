@@ -154,6 +154,7 @@ const Header = ({ theme, toggleTheme }) => {
                 {/* Dropdown menu */}
                 {isMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-secondary rounded-md shadow-lg py-1 border border-gray-700 z-50">
+                    {/* Dashboard 功能已隐藏 
                     <Link
                       to="/dashboard"
                       className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
@@ -162,6 +163,7 @@ const Header = ({ theme, toggleTheme }) => {
                       <User className="inline-block h-4 w-4 mr-2" />
                       Dashboard
                     </Link>
+                    */}
                     <Link
                       to="/profile"
                       className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"

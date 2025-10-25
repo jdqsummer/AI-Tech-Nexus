@@ -60,36 +60,65 @@ const Article = () => {
     }
   };
 
+  // 处理删除文章
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this article?')) {
+    console.warn('开始删除文章，当前用户:', currentUser);
+    console.warn('文章信息:', article);
+    
+    if (!currentUser) {
+      alert('请先登录再删除文章')
+      return
+    }
+    
+    // 检查权限 - 与显示逻辑保持一致
+    const isAuthor = currentUser.id === article.author_id
+    
+    console.log('权限检查结果:', isAuthor);
+    
+    if (!isAuthor) {
+      alert('您没有权限删除这篇文章')
+      return
+    }
+
+    if (window.confirm('确定要删除这篇文章吗？此操作不可恢复。')) {
       try {
+        console.log('开始执行删除操作，文章ID:', id);
         // 从Supabase删除文章
         const { error } = await supabase
           .from('articles')
           .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-
-        // 更新localStorage缓存
-        const storedArticles = JSON.parse(localStorage.getItem('articles')) || [];
-        const updatedArticles = storedArticles.filter(article => article.id != id);
-        localStorage.setItem('articles', JSON.stringify(updatedArticles));
+          .eq('id', id)
         
-        navigate('/articles');
+        if (error) {
+          console.error('Supabase删除错误:', error);
+          throw error
+        }
+        
+        console.log('Supabase删除成功');
+        
+        // 从localStorage中移除文章
+        const storedArticles = JSON.parse(localStorage.getItem('articles') || '[]')
+        console.log('删除前localStorage中的文章:', storedArticles);
+        const updatedArticles = storedArticles.filter(a => a.id != id)
+        localStorage.setItem('articles', JSON.stringify(updatedArticles))
+        console.log('删除后localStorage中的文章:', updatedArticles);
+        
+        // 显示删除成功消息并导航到文章列表页
+        alert('文章已成功删除')
+        navigate('/articles')
       } catch (err) {
-        console.error('Failed to delete article:', err);
-        alert('Failed to delete article: ' + err.message);
+        console.error('Error deleting article:', err)
+        alert('删除文章失败: ' + err.message)
       }
     }
-  };
+  }
 
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim() || !currentUser) return;
 
     const comment = {
-      id: Date.now(),
+      id: Date.now() + Math.random(), // 生成唯一ID
       content: newComment,
       author: currentUser.username || currentUser.email,
       created_at: new Date().toISOString()
@@ -181,7 +210,8 @@ const Article = () => {
       </div>
     );
   }
-
+  console.warn("Article:",article)
+  console.warn("currentUser:",currentUser)
   return (
     <div className="min-h-screen bg-brand-dark pattern-grid pattern-cyan-400 pattern-bg-brand-dark pattern-opacity-10 pattern-size-20">
       {/* 添加渐变背景层 */}
@@ -248,7 +278,7 @@ const Article = () => {
             </div>
 
             {/* 编辑和删除按钮（仅作者可见） */}
-            {currentUser && currentUser.email === article.authorEmail && (
+            {currentUser && currentUser.id === article.author_id && (
               <div className="px-8 py-6 border-t border-cyan-500/20 flex gap-4">
                 <Link 
                   to={`/edit-article/${article.id}`}

@@ -423,14 +423,6 @@ const Profile = () => {
                     <span className="text-gray-400">Comments</span>
                     <span className="text-white font-medium">{stats.comments}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Followers</span>
-                    <span className="text-white font-medium">{stats.followers}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Following</span>
-                    <span className="text-white font-medium">{stats.following}</span>
-                  </div>
                 </div>
               </div>
             </div>

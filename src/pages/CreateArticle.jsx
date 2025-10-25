@@ -1,30 +1,92 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, X } from 'lucide-react'
 import { supabase } from '../../supabase-config'
+import { ArrowLeft, Save, X } from 'lucide-react'
+import RichTextEditor from '@components/RichTextEditor.jsx'
+
 
 const CreateArticle = () => {
   const navigate = useNavigate()
   const [article, setArticle] = useState({
     title: '',
     summary: '',
-    category: 'Product',
+    content: '',
+    category: '',
     tags: '',
-    content: ''
+    cover_image: ''
   })
+  const [categories, setCategories] = useState([])
+  const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState('') // 添加error状态
+  const editorRef = useRef(null)
   const [user, setUser] = useState(null)
+  
+  
 
-  // 检查用户是否已登录
+  // 加载分类数据和检查用户登录状态
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'))
-    if (!currentUser) {
-      navigate('/login')
-      return
+    fetchCategories()
+    checkUser()
+  }, [])
+
+  // 获取分类数据
+  const fetchCategories = async () => {
+    try {
+      // 先尝试从数据库获取分类
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name')
+
+      if (error) {
+        console.warn('Error fetching categories from database:', error)
+        // 如果数据库中没有分类表，使用默认分类
+        setCategories([
+          { id: 1, name: 'Product' },
+          { id: 2, name: 'Development' },
+          { id: 3, name: 'Technology' },
+          { id: 4, name: 'Science' },
+          { id: 5, name: 'AI' },
+          { id: 6, name: 'Programming' },
+          { id: 7, name: 'Tutorials' }
+        ])
+      } else {
+        setCategories(data || [])
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err)
+      // 出现异常时使用默认分类
+      setCategories([
+        { id: 1, name: 'Product' },
+        { id: 2, name: 'Development' },
+        { id: 3, name: 'Technology' },
+        { id: 4, name: 'Science' },
+        { id: 5, name: 'AI' },
+        { id: 6, name: 'Programming' },
+        { id: 7, name: 'Tutorials' }
+      ])
     }
-    setUser(currentUser)
-  }, [navigate])
+  }
+
+  // 检查用户是否已登录并设置用户信息
+  const checkUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        navigate('/login')
+      } else {
+        setUser(user)
+      }
+    } catch (err) {
+      console.error('Error fetching user:', err)
+      navigate('/login')
+    }
+  }
+  
+  
+  
+  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -33,6 +95,9 @@ const CreateArticle = () => {
       [name]: value
     }))
   }
+
+  // 插入格式化文本
+  // 处理图片上传
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -60,7 +125,7 @@ const CreateArticle = () => {
         content: article.content,
         category: article.category || 'Product',
         tags: article.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        author: user.username,
+        author: user.email || user.id, // 使用email或id作为作者名
         author_id: user.id,
         user_id: user.id,
         user_email: user.email,
@@ -175,24 +240,22 @@ const CreateArticle = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Category
-                    </label>
-                    <select
-                      name="category"
-                      value={article.category}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-gray-800/50 border border-cyan-500/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition backdrop-blur-sm"
-                    >
-                      <option value="Product">Product</option>
-                      <option value="Development">Development</option>
-                      <option value="Technology">Technology</option>
-                      <option value="Science">Science</option>
-                      <option value="AI">AI</option>
-                      <option value="Programming">Programming</option>
-                      <option value="Tutorials">Tutorials</option>
-                    </select>
-                  </div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    value={article.category}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-cyan-500/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition backdrop-blur-sm"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.id || cat.name} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -209,19 +272,20 @@ const CreateArticle = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Content *
-                  </label>
-                  <textarea
-                    name="content"
-                    value={article.content}
-                    onChange={handleInputChange}
-                    rows={15}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition backdrop-blur-sm"
-                    placeholder="Write your article content here..."
-                    required
-                  />
+                <div className="flex flex-col flex-grow">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Content *
+                    </label>
+                  </div>
+                  <div className="flex flex-col flex-grow w-full min-h-[300px] max-h-[500px]">
+                    <RichTextEditor 
+                      content={article.content}
+                      setContent={(content) => setArticle(prev => ({ ...prev, content }))}
+                      isEdit={false}
+                      isFullScreen={false}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex space-x-4 pt-4">

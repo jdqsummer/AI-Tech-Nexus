@@ -46,7 +46,7 @@ const Contact = () => {
               {/* 添加网格图案覆盖层 */}
               <div className="absolute inset-0 pattern-grid pattern-cyan-400 pattern-bg-brand-dark pattern-opacity-5 pattern-size-20 pointer-events-none"></div>
               
-              <div className="relative z-10">
+              <div className="relative z-10 text-left">
                 <h2 className="text-2xl font-bold text-white mb-6 bg-gradient-to-r from-cyan-400 to-magenta-400 bg-clip-text text-transparent animate-fade-in">
                   Contact Information
                 </h2>

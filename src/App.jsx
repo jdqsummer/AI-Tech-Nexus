@@ -25,14 +25,14 @@ function App() {
     // 从localStorage加载主题偏好
     const savedTheme = localStorage.getItem('theme') || 'dark'
     setTheme(savedTheme)
-    document.documentElement.className = savedTheme
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark')
   }, [])
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
     setTheme(newTheme)
     localStorage.setItem('theme', newTheme)
-    document.documentElement.className = newTheme
+    document.documentElement.classList.toggle('dark', newTheme === 'dark')
   }
 
   return (
