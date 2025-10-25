@@ -1,0 +1,21 @@
+{
+  "name": "ai-tech-nexus",
+  "services": [
+    {
+      "name": "web",
+      "type": "nodejs",
+      "version": "18",
+      "build": {
+        "command": "npm run build",
+        "outputDir": "dist"
+      },
+      "run": {
+        "command": "npm run preview",
+        "port": 3000
+      },
+      "envs": {
+        "NODE_ENV": "production"
+      }
+    }
+  ]
+}

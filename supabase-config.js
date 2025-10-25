@@ -5,8 +5,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // 配置管理：支持环境变量和本地配置
-const SUPABASE_URL = 'https://eewaqidqcobvdyhcityc.supabase.co';
-const SUPABASE_ANON_KEY =  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVld2FxaWRxY29idmR5aGNpdHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwMDg4OTUsImV4cCI6MjA3NjU4NDg5NX0.j8fLi-dRAoyGWrx_5AY8zKFwuznaz2G9CG8kkRx6vi0';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // 验证配置
 if (!SUPABASE_URL || SUPABASE_URL === 'YOUR_SUPABASE_PROJECT_URL' || 

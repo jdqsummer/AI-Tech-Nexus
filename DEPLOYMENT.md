@@ -1,0 +1,61 @@
+# 部署到Zeabur平台指南
+
+本文档提供了将AI Tech Nexus应用程序部署到Zeabur平台的详细步骤。
+
+## 部署前准备
+
+1. 确保你已经在Zeabur平台创建了账户
+2. 准备好你的Supabase项目配置信息：
+   - Supabase Project URL
+   - Supabase Anon Key
+
+## 部署步骤
+
+### 1. 在Zeabur上创建服务
+
+1. 登录到 [Zeabur](https://zeabur.com)
+2. 点击 "New Project"
+3. 选择 "Import from GitHub" 或上传代码
+4. 选择你的AI Tech Nexus代码仓库
+
+### 2. 配置环境变量
+
+在Zeabur项目设置中，添加以下环境变量：
+
+```
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 3. 配置构建设置
+
+Zeabur会自动检测到`zeabur.json`配置文件并使用以下设置：
+
+- 构建命令: `npm run build`
+- 输出目录: `dist`
+- 运行命令: `npm run preview`
+- 端口: `3000`
+
+### 4. 部署
+
+1. 点击 "Deploy" 按钮开始部署
+2. 等待构建和部署完成
+3. 部署成功后，Zeabur会提供一个URL访问你的应用
+
+## 本地开发与生产环境的区别
+
+- 本地开发使用 `npm run dev` 启动开发服务器
+- 生产环境使用 `npm run build` 构建应用，然后使用 `npm run preview` 运行
+
+## 故障排除
+
+如果遇到问题，请检查：
+
+1. 环境变量是否正确配置
+2. Supabase配置是否正确
+3. 构建过程中是否有错误信息
+4. 确保所有依赖都已正确安装
+
+## 支持
+
+如有任何问题，请联系项目维护者或查看相关文档。
