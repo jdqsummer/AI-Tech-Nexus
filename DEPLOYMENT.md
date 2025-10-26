@@ -54,7 +54,7 @@ Zeabur会自动检测到`zeabur.json`配置文件并使用以下设置：
 1. 确保所有脚本使用跨平台兼容的语法
 2. 检查是否有Windows特定的路径分隔符或命令
 3. 在Zeabur的构建设置中明确指定Node.js版本（推荐使用LTS版本）
-4. 使用`npm exec`而不是`npx`执行本地安装的CLI工具，避免权限问题
+4. 使用`npx`而不是`npm exec`执行本地安装的CLI工具，避免权限问题
 
 ## 故障排除
 
@@ -67,6 +67,15 @@ Zeabur会自动检测到`zeabur.json`配置文件并使用以下设置：
 5. 检查是否存在跨平台兼容性问题
 6. 检查是否有权限问题导致命令无法执行（特别是在Linux环境中）
 7. 确保使用了正确的Node.js版本（推荐18.17.0 LTS）
+
+### 权限问题解决方案
+
+如果在Zeabur部署时遇到"vite: Permission denied"错误，请尝试以下解决方案：
+
+1. 确保package.json中的build脚本使用`npx vite build`而不是其他形式
+2. 在zeabur.json中明确指定Node.js版本为18.17.0
+3. 确保zeabur.json中的构建命令包含`npm install && npm run build`
+4. 检查项目中是否有任何平台特定的依赖或配置
 
 ## 支持
 

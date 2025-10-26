@@ -212,7 +212,7 @@ AI-Tech-Nexus/
 1. 确保所有npm脚本使用跨平台兼容的语法
 2. 避免在脚本中使用Windows特定的命令或路径分隔符
 3. 在部署平台上明确指定Node.js版本（推荐使用LTS版本）
-4. 使用`npm exec`而不是`npx`执行本地安装的CLI工具，避免权限问题
+4. 使用`npx`而不是`npm exec`执行本地安装的CLI工具，避免权限问题
 
 如果遇到构建错误（如错误代码127："命令未找到"或"Permission denied"），请检查：
 1. 构建命令是否正确（`npm run build`）
@@ -220,6 +220,15 @@ AI-Tech-Nexus/
 3. 是否存在平台特定的代码或配置
 4. 是否有权限问题导致命令无法执行
 5. 确保使用了正确的Node.js版本（推荐18.17.0 LTS）
+
+#### 权限问题解决方案
+
+如果在Zeabur部署时遇到"vite: Permission denied"错误，请尝试以下解决方案：
+
+1. 确保package.json中的build脚本使用`npx vite build`而不是其他形式
+2. 在zeabur.json中明确指定Node.js版本为18.17.0
+3. 确保zeabur.json中的构建命令包含`npm install && npm run build`
+4. 检查项目中是否有任何平台特定的依赖或配置
 
 ### 部署到 Vercel
 
