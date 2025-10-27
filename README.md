@@ -225,10 +225,11 @@ AI-Tech-Nexus/
 
 如果在Zeabur部署时遇到"vite: Permission denied"错误，请尝试以下解决方案：
 
-1. 确保package.json中的build脚本使用`npx vite build`而不是其他形式
+1. 确保package.json中的build脚本使用`node node_modules/vite/bin/vite.js build`而不是其他形式
 2. 在zeabur.json中明确指定Node.js版本为18.17.0
 3. 确保zeabur.json中的构建命令包含`npm install && npm run build`
 4. 检查项目中是否有任何平台特定的依赖或配置
+5. 如果问题仍然存在，尝试在zeabur.json中添加环境变量：`"PATH": "/usr/local/bin:/usr/bin:/bin"`
 
 ### 部署到 Vercel
 
