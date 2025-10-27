@@ -182,20 +182,32 @@ const Home = () => {
                       </span>
                     ))}
                   </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-700/50">
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <div className="flex flex-col justify-start gap-3 mt-4 pt-4 border-t border-gray-700/50">
+                        
+                        <div className="flex flex-row items-center space-x-2 text-sm text-gray-500">
                           <User className="w-4 h-4" />
                           <span>{article.author}</span>
-                          <Calendar className="w-4 h-4" />
-                          <span>{formatDate(article.created_at)}</span>
                         </div>
-                        <Link 
-                          to={`/article/${article.id}`}
-                          className="text-cyan-400 hover:text-cyan-300 font-medium text-sm flex items-center self-start sm:self-auto"
-                        >
-                          Read More
-                          <ChevronRight className="ml-1 h-4 w-4" />
-                        </Link>
+                        
+                        <div className="flex flex-row justify-between items-center space-x-2 text-sm text-gray-500">
+                          
+                          <div className="flex flex-row justify-start items-center space-x-2 text-sm text-gray-500">
+                            <Calendar className="w-4 h-4" />
+                            <span>{formatDate(article.created_at)}</span>
+                          </div>
+                          
+                          <div className="flex justify-end">
+                            <Link 
+                            to={`/article/${article.id}`}
+                            className="text-cyan-400 hover:text-cyan-300 font-medium text-sm flex items-center"
+                            >
+                              Read More
+                              <ChevronRight className="ml-1 h-4 w-4" />
+                            </Link>
+                          </div>
+                          
+                        </div>
+                        
                       </div>
                     </div>
                   </div>
