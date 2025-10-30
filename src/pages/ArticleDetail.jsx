@@ -4,6 +4,7 @@ import { Calendar, User, Tag, ClipboardEdit, ArrowLeft, Trash2 } from 'lucide-re
 import { supabase } from '../../supabase-config'
 import { commentService } from '../services/commentService'
 import Modal from '../components/Modal'
+import RichTextEditor from '../components/RichTextEditor'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-jsx.min.js'
 import 'prismjs/components/prism-javascript.min.js'
@@ -69,7 +70,7 @@ const ArticleDetail = () => {
           // 执行代码高亮
           Prism.highlightAll();
         };
-        
+
         // 在DOM更新后执行高亮
         requestAnimationFrame(highlightCode);
       } catch (error) {
@@ -77,6 +78,27 @@ const ArticleDetail = () => {
       }
     }
   }, [article]);
+
+  // 在评论内容更新后调用Prism.js进行代码高亮
+  useEffect(() => {
+    if (Prism && Prism.highlightAll && comments.length > 0) {
+      try {
+        // 延迟执行以确保DOM已更新
+        setTimeout(() => {
+          // 为所有代码块添加行号类
+          const codeBlocks = document.querySelectorAll('.prose pre code');
+          codeBlocks.forEach(block => {
+            block.classList.add('line-numbers');
+          });
+          
+          // 执行代码高亮
+          Prism.highlightAll();
+        }, 100);
+      } catch (error) {
+        console.warn('Prism.js highlighting failed for comments:', error);
+      }
+    }
+  }, [comments]);
 
   // 加载文章数据（分层存储架构）
   const loadArticle = async () => {
@@ -132,7 +154,7 @@ const ArticleDetail = () => {
     }
   }
 
-  // 处理添加评论
+  // 处理添加评论（支持富文本内容）
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim() || !currentUser) return;
@@ -356,7 +378,9 @@ const ArticleDetail = () => {
                           </span>
                         </div>
                       </div>
-                      <p className="text-gray-300 pl-2 border-l-2 border-cyan-500/30">{comment.content}</p>
+                      <div className="prose prose-invert max-w-none pl-2 border-cyan-500/30">
+                        <div dangerouslySetInnerHTML={{ __html: comment.content }} />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -376,14 +400,15 @@ const ArticleDetail = () => {
                 <form onSubmit={handleAddComment} className="mt-8 relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-magenta-500/10 rounded-2xl blur-xl opacity-30 -z-10"></div>
                   <div className="relative bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 border border-cyan-500/20 rounded-2xl p-6 backdrop-blur-sm">
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Add a comment..."
-                      className="w-full p-4 bg-brand-dark-secondary/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 resize-none transition-all"
-                      rows="3"
-                    />
-                    <div className="flex justify-end mt-2">
+                    <div className="flex flex-col flex-grow w-full mb-4">
+                      <RichTextEditor 
+                        content={newComment}
+                        setContent={setNewComment}
+                        isEdit={false}
+                        isFullScreen={false}
+                      />
+                    </div>
+                    <div className="flex justify-end">
                       <button
                         type="submit"
                         disabled={!newComment.trim()}

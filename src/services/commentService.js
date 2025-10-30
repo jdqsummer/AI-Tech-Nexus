@@ -38,7 +38,7 @@ export const commentService = {
     }
   },
 
-  // 添加新评论
+  // 添加新评论（支持富文本内容）
   addComment: async (commentData) => {
     try {
       const { data, error } = await supabase
