@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Calendar, User, Tag, ClipboardEdit, ArrowLeft, Trash2 } from 'lucide-react'
+import { Calendar, User, Tag, ClipboardEdit, ArrowLeft, Trash2, Edit3, Save, X } from 'lucide-react'
 import { supabase } from '../../supabase-config'
 import { commentService } from '../services/commentService'
 import Modal from '../components/Modal'
@@ -15,6 +15,9 @@ import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js'
 import 'prismjs/plugins/autoloader/prism-autoloader.min.js'
 import 'prismjs/themes/prism-tomorrow.min.css'
 import 'prismjs/plugins/line-numbers/prism-line-numbers.min.css'
+import 'prismjs/plugins/toolbar/prism-toolbar.min.css'
+import 'prismjs/plugins/toolbar/prism-toolbar.min.js'
+import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js'
 
 const ArticleDetail = () => {
   const { id } = useParams()
@@ -24,6 +27,9 @@ const ArticleDetail = () => {
   const [newComment, setNewComment] = useState('')
   const [currentUser, setCurrentUser] = useState(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [editingCommentId, setEditingCommentId] = useState(null)
+  const [editingCommentContent, setEditingCommentContent] = useState('')
+  const [commentToDelete, setCommentToDelete] = useState(null)
 
   useEffect(() => {
     // 加载文章数据（分层存储架构）
@@ -180,6 +186,70 @@ const ArticleDetail = () => {
     }
   };
 
+  // 开始编辑评论
+  const startEditingComment = (comment) => {
+    if (!currentUser || currentUser.id !== comment.user_id) {
+      alert('您没有权限编辑此评论');
+      return;
+    }
+    
+    setEditingCommentId(comment.id);
+    setEditingCommentContent(comment.content);
+  };
+
+  // 取消编辑评论
+  const cancelEditingComment = () => {
+    setEditingCommentId(null);
+    setEditingCommentContent('');
+  };
+
+  // 保存编辑后的评论
+  const saveEditingComment = async () => {
+    if (!editingCommentContent.trim() || !currentUser) return;
+
+    try {
+      // 使用commentService更新评论
+      const updatedComment = await commentService.updateComment(
+        editingCommentId,
+        editingCommentContent,
+        currentUser.id
+      );
+
+      // 更新本地状态
+      setComments(prevComments =>
+        prevComments.map(comment =>
+          comment.id === editingCommentId ? updatedComment : comment
+        )
+      );
+
+      // 重置编辑状态
+      setEditingCommentId(null);
+      setEditingCommentContent('');
+    } catch (err) {
+      console.error('Error updating comment:', err);
+      alert('更新评论失败: ' + err.message);
+    }
+  };
+
+  // 处理删除评论
+  const handleDeleteComment = async (commentId) => {
+    if (!currentUser) {
+      alert('请先登录');
+      return;
+    }
+
+    try {
+      // 使用commentService删除评论
+      await commentService.deleteComment(commentId, currentUser.id);
+
+      // 更新本地状态
+      setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
+    } catch (err) {
+      console.error('Error deleting comment:', err);
+      alert('删除评论失败: ' + err.message);
+    }
+  };
+
   // 处理删除文章
   const handleDelete = async () => {
     if (!currentUser || currentUser.id !== article.author_id) {
@@ -244,6 +314,21 @@ const ArticleDetail = () => {
         cancelText="取消"
       >
         <p>确定要删除这篇文章吗？此操作不可恢复。</p>
+      </Modal>
+      
+      {/* 评论删除确认弹窗 */}
+      <Modal
+        isOpen={!!commentToDelete}
+        onClose={() => setCommentToDelete(null)}
+        onConfirm={() => {
+          handleDeleteComment(commentToDelete.id)
+          setCommentToDelete(null)
+        }}
+        title="Delete Comment"
+        confirmText="Delete"
+        cancelText="Cancel"
+      >
+        <p>Are you sure you want to delete this comment?</p>
       </Modal>
       <div className="container mx-auto px-6 max-w-4xl">
         {/* 返回按钮 */}
@@ -377,10 +462,58 @@ const ArticleDetail = () => {
                             {new Date(comment.created_at).toLocaleDateString()}
                           </span>
                         </div>
+                        {currentUser && currentUser.id === comment.user_id && (
+                          <div className="ml-auto flex space-x-2">
+                            <button
+                              onClick={() => startEditingComment(comment)}
+                              className="p-2 text-gray-400 hover:text-cyan-400 transition-colors"
+                              title="Update Comment"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setCommentToDelete(comment)}
+                              className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                              title="Delete Comment"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <div className="prose prose-invert max-w-none pl-2 border-cyan-500/30">
-                        <div dangerouslySetInnerHTML={{ __html: comment.content }} />
-                      </div>
+                      
+                      {editingCommentId === comment.id ? (
+                        // 编辑评论界面
+                        <div className="mt-4">
+                          <RichTextEditor
+                            content={editingCommentContent}
+                            setContent={setEditingCommentContent}
+                            isEdit={false}
+                            isFullScreen={false}
+                          />
+                          <div className="flex justify-end space-x-2 mt-4">
+                            <button
+                              onClick={cancelEditingComment}
+                              className="px-2 py-2 text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-2"
+                            >
+                              <X className="w-4 h-4" />
+                              Cancel
+                            </button>
+                            <button
+                              onClick={saveEditingComment}
+                              className="px-2 py-2 bg-gradient-to-r from-cyan-500 to-magenta-500 hover:from-cyan-600 hover:to-magenta-600 text-white rounded-lg transition-all flex items-center gap-2"
+                            >
+                              <Save className="w-4 h-4" />
+                              Update
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        // 显示评论内容
+                        <div className="prose prose-invert max-w-none pl-2 border-cyan-500/30">
+                          <div dangerouslySetInnerHTML={{ __html: comment.content }} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

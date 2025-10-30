@@ -22,13 +22,13 @@ export const userService = {
 
       if (userError) {
         // 如果profiles表中没有用户数据，创建一个新的用户档案
-        console.warn('No profile found in profiles table, creating new profile for user:', session.user.id, session.user);
+        console.warn('No profile found in profiles table, creating new profile for user:', session.user.id);
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
           .insert([
             {
               id: session.user.id,
-              username: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'user',
+              username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'user',
               avatar_url: session.user.user_metadata?.avatar_url || '',
               updated_at: new Date().toISOString(),
               created_at: session.user.created_at || new Date().toISOString()

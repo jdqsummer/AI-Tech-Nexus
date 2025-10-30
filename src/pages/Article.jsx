@@ -57,9 +57,6 @@ const Article = () => {
 
   // 处理删除文章
   const handleDelete = async () => {
-    console.warn('开始删除文章，当前用户:', currentUser);
-    console.warn('文章信息:', article);
-    
     if (!currentUser) {
       alert('请先登录再删除文章')
       return
@@ -67,9 +64,6 @@ const Article = () => {
     
     // 检查权限 - 与显示逻辑保持一致
     const isAuthor = currentUser.id === article.author_id
-    
-    console.log('权限检查结果:', isAuthor);
-    
     if (!isAuthor) {
       alert('您没有权限删除这篇文章')
       return
@@ -77,7 +71,6 @@ const Article = () => {
 
     if (window.confirm('确定要删除这篇文章吗？此操作不可恢复。')) {
       try {
-        console.log('开始执行删除操作，文章ID:', id);
         // 从Supabase删除文章
         const { error } = await supabase
           .from('articles')
@@ -89,14 +82,10 @@ const Article = () => {
           throw error
         }
         
-        console.log('Supabase删除成功');
-        
         // 从localStorage中移除文章
         const storedArticles = JSON.parse(localStorage.getItem('articles') || '[]')
-        console.log('删除前localStorage中的文章:', storedArticles);
         const updatedArticles = storedArticles.filter(a => a.id != id)
         localStorage.setItem('articles', JSON.stringify(updatedArticles))
-        console.log('删除后localStorage中的文章:', updatedArticles);
         
         // 显示删除成功消息并导航到文章列表页
         alert('文章已成功删除')

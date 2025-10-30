@@ -1,6 +1,7 @@
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import React, { useState, useEffect } from 'react';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
+import imageUploadService from '../services/imageUploadService';
 const RichTextEditor = ({ content, isEdit, setContent, isFullScreen }) => {
   const [editor, setEditor] = useState(null);
 
@@ -100,6 +101,29 @@ const RichTextEditor = ({ content, isEdit, setContent, isFullScreen }) => {
   const editorConfig = {
     placeholder: '在此处输入内容...',
     MENU_CONF: {
+      // 图片上传配置
+      uploadImage: {
+        // 自定义上传
+        customUpload: async (file, insertFn) => {
+          try {
+            // 使用我们的自定义服务上传图片
+            const url = await imageUploadService.uploadImage(file);
+            
+            // 上传成功后插入图片
+            insertFn(url, file.name);
+          } catch (err) {
+            // 上传失败提示错误
+            console.error('图片上传失败:', err);
+            alert('图片上传失败: ' + err.message);
+          }
+        },
+        // 单个文件的最大体积限制，默认为 2M
+        maxSize: 2 * 1024 * 1024, // 2M
+        // 最多可上传几个文件
+        maxNumberOfFiles: 10,
+        // 选择文件时的类型限制，默认为 ['jpg', 'jpeg', 'png', 'gif']
+        allowedFileTypes: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      },
       // 粘贴配置
       paste: {
         // 保留粘贴样式

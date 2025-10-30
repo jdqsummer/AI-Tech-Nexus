@@ -88,5 +88,41 @@ export const commentService = {
       console.error('Error deleting comment:', err);
       throw err;
     }
+  },
+
+  // 更新评论
+  updateComment: async (commentId, content, userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .update({ content })
+        .eq('id', commentId)
+        .eq('user_id', userId)
+        .select(`
+          id,
+          content,
+          created_at,
+          user_id,
+          user_email,
+          profiles (username)
+        `)
+        .single();
+
+      if (error) throw error;
+      
+      // 格式化返回的评论数据
+      const formattedComment = {
+        id: data.id,
+        content: data.content,
+        created_at: data.created_at,
+        author: data.profiles?.username || data.user_email || 'Anonymous',
+        user_id: data.user_id
+      };
+      
+      return formattedComment;
+    } catch (err) {
+      console.error('Error updating comment:', err);
+      throw err;
+    }
   }
 };
