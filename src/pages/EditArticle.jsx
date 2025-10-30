@@ -34,7 +34,7 @@ const EditArticle = () => {
       // 获取当前用户
       const currentUser = JSON.parse(localStorage.getItem('currentUser'))
       if (!currentUser) {
-        throw new Error('用户未登录')
+        throw new Error('You must be logged in to edit articles')
       }
 
       // 首先尝试从localStorage获取
@@ -43,7 +43,7 @@ const EditArticle = () => {
       if (foundArticle) {
         // 验证用户是否有权限编辑这篇文章
         if (currentUser.id !== foundArticle.user_id) {
-          throw new Error('您没有权限编辑这篇文章')
+          throw new Error('You do not have permission to edit this article')
         }
         
         // 如果localStorage中有数据，直接使用
@@ -64,7 +64,7 @@ const EditArticle = () => {
 
         // 验证用户是否有权限编辑这篇文章
         if (currentUser.id !== data.author_id) {
-          throw new Error('您没有权限编辑这篇文章')
+          throw new Error('You do not have permission to edit this article')
         }
 
         // 设置状态
@@ -79,9 +79,9 @@ const EditArticle = () => {
       }
     } catch (err) {
       console.error('Error fetching article:', err)
-      setError('获取文章失败: ' + err.message)
+      setError('Failed to fetch article: ' + err.message)
       // 如果是权限错误，重定向到文章详情页
-      if (err.message === '您没有权限编辑这篇文章') {
+      if (err.message === 'You do not have permission to edit this article') {
         setTimeout(() => {
           window.location.href = `/article/${id}`
         }, 2000)
@@ -92,8 +92,18 @@ const EditArticle = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!title.trim() || !content.trim()) {
-      setError('标题和内容不能为空')
+      setError('Title and content cannot be empty')
       return
+    }
+
+    // 标签验证
+    if (tags) {
+      const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      const invalidTags = tagsArray.filter(tag => tag.length > 20);
+      if (invalidTags.length > 0) {
+        setError(`Invalid tags: ${invalidTags.join(', ')}. Tags must be 20 characters or less.`)
+        return
+      }
     }
 
     setLoading(true)
@@ -103,7 +113,7 @@ const EditArticle = () => {
       // 从localStorage获取当前用户
       const currentUser = JSON.parse(localStorage.getItem('currentUser'))
       if (!currentUser) {
-        throw new Error('用户未登录')
+        throw new Error('You must be logged in to edit articles')
       }
 
       // 更新Supabase数据库
@@ -133,7 +143,7 @@ const EditArticle = () => {
       navigate(`/article/${id}`)
     } catch (err) {
       console.error('Error updating article:', err)
-      setError('更新文章失败: ' + err.message)
+      setError('Failed to update article: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -216,8 +226,27 @@ const EditArticle = () => {
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             className="w-full px-4 py-3 bg-gray-800/50 border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition backdrop-blur-sm"
-            placeholder="Comma-separated tags"
+            placeholder="Comma-separated tags (e.g. react, javascript, tutorial)"
           />
+          {tags && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {tags.split(',').map((tag, index) => {
+                const trimmedTag = tag.trim();
+                // 验证标签长度
+                if (!trimmedTag || trimmedTag.length > 20) {
+                  return null;
+                }
+                return (
+                  <span 
+                    key={index} 
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                  >
+                    {trimmedTag}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col flex-grow">

@@ -13,7 +13,8 @@ const CreateArticle = () => {
     content: '',
     category: '',
     tags: '',
-    cover_image: ''
+    cover_image: '',
+    thumbnail: 'https://r2.flowith.net/files/png/YC7WV-tech_article_thumbnail_concept_index_1@1024x1024.png'
   })
   const [categories, setCategories] = useState([])
   const [file, setFile] = useState(null)
@@ -117,6 +118,17 @@ const CreateArticle = () => {
       return
     }
 
+    // 标签验证
+    if (article.tags) {
+      const tagsArray = article.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      const invalidTags = tagsArray.filter(tag => tag.length > 20);
+      if (invalidTags.length > 0) {
+        setError(`Invalid tags: ${invalidTags.join(', ')}. Tags must be 20 characters or less.`)
+        setLoading(false)
+        return
+      }
+    }
+
     try {
       // 创建新文章对象
       const newArticle = {
@@ -129,7 +141,7 @@ const CreateArticle = () => {
         author_id: user.id,
         user_id: user.id,
         user_email: user.email,
-        thumbnail: 'https://r2.flowith.net/files/png/YC7WV-tech_article_thumbnail_concept_index_1@1024x1024.png'
+        thumbnail: article.thumbnail || 'https://r2.flowith.net/files/png/YC7WV-tech_article_thumbnail_concept_index_1@1024x1024.png'
       }
 
       // 保存到Supabase数据库
@@ -267,9 +279,56 @@ const CreateArticle = () => {
                       value={article.tags}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition backdrop-blur-sm"
-                      placeholder="Comma-separated tags"
+                      placeholder="Comma-separated tags (e.g. react, javascript, tutorial)"
                     />
+                    
+                    {article.tags && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {article.tags.split(',').map((tag, index) => {
+                          const trimmedTag = tag.trim();
+                          // 验证标签长度
+                          if (!trimmedTag || trimmedTag.length > 20) {
+                            return null;
+                          }
+                          return (
+                            <span 
+                              key={index} 
+                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                            >
+                              {trimmedTag}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Thumbnail URL
+                  </label>
+                  <input
+                    type="text"
+                    name="thumbnail"
+                    value={article.thumbnail}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition backdrop-blur-sm"
+                    placeholder="Enter thumbnail image URL"
+                  />
+                  {article.thumbnail && (
+                    <div className="mt-2">
+                      <img 
+                        src={article.thumbnail} 
+                        alt="Thumbnail preview" 
+                        className="w-32 h-32 object-cover rounded-lg border border-cyan-500/20"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://r2.flowith.net/files/png/YC7WV-tech_article_thumbnail_concept_index_1@1024x1024.png';
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col flex-grow">

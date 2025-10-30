@@ -16,6 +16,8 @@ import CreateArticle from './pages/CreateArticle'
 import EditArticle from './pages/EditArticle'
 import Terms from './pages/Terms'
 import PrivacyPolicy from './pages/PrivacyPolicy'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import './../style.css'
 
 function App() {
@@ -54,6 +56,8 @@ function App() {
             <Route path="/edit-article/:id" element={<EditArticle />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </main>
         <Footer />

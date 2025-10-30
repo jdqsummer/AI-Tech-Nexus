@@ -69,11 +69,16 @@ const Header = ({ theme, toggleTheme }) => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="bg-cyan-500 w-8 h-8 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">AI</span>
+            <Link to="/" className="flex items-center space-x-2 group">
+              <div className="relative">
+                <img 
+                  src="/logo.png" 
+                  alt="AI Tech Nexus Logo" 
+                  className="h-10 w-10 rounded-xl shadow-lg transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-cyan-500/50 animate-pulse-slow glow-cyan" 
+                />
+                <div className="absolute inset-0 rounded-xl bg-cyan-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"></div>
               </div>
-              <span className="text-white font-bold text-xl hidden sm:block">AI Tech Nexus</span>
+              <span className="text-white font-bold text-xl hidden sm:block transition-all duration-300 group-hover:text-cyan-400">AI Tech Nexus</span>
             </Link>
           </div>
 

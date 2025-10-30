@@ -58,18 +58,18 @@ const Article = () => {
   // 处理删除文章
   const handleDelete = async () => {
     if (!currentUser) {
-      alert('请先登录再删除文章')
+      alert('You must be logged in to delete articles')
       return
     }
     
     // 检查权限 - 与显示逻辑保持一致
     const isAuthor = currentUser.id === article.author_id
     if (!isAuthor) {
-      alert('您没有权限删除这篇文章')
+      alert('You do not have permission to delete this article')
       return
     }
 
-    if (window.confirm('确定要删除这篇文章吗？此操作不可恢复。')) {
+    if (window.confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
       try {
         // 从Supabase删除文章
         const { error } = await supabase
@@ -78,7 +78,7 @@ const Article = () => {
           .eq('id', id)
         
         if (error) {
-          console.error('Supabase删除错误:', error);
+          console.error('Failed to delete article from Supabase:', error);
           throw error
         }
         
@@ -88,11 +88,11 @@ const Article = () => {
         localStorage.setItem('articles', JSON.stringify(updatedArticles))
         
         // 显示删除成功消息并导航到文章列表页
-        alert('文章已成功删除')
+        alert('Article deleted successfully')
         navigate('/articles')
       } catch (err) {
         console.error('Error deleting article:', err)
-        alert('删除文章失败: ' + err.message)
+        alert('Failed to delete article: ' + err.message)
       }
     }
   }

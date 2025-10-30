@@ -2,6 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 脉冲动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 发光效果 */
+.glow-cyan {
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
+}
+
+.group:hover .glow-cyan {
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.3);
+}
+
 /* 自定义CSS变量 */
 :root {
   --primary-bg: #0A0F1E;
