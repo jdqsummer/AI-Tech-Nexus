@@ -107,20 +107,29 @@ const Home = () => {
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-4">{featuredArticle.title}</h3>
                   <p className="text-gray-300 mb-6">{featuredArticle.summary}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <User className="h-5 w-5 text-gray-400 mr-2" />
-                      <span className="text-gray-400">{featuredArticle.author}</span>
-                      <Calendar className="h-5 w-5 text-gray-400 ml-4 mr-2" />
-                      <span className="text-gray-400">{formatDate(featuredArticle.created_at)}</span>
+                  
+                  <div className="flex flex-col justify-start gap-3 mt-4 pt-4 border-t border-gray-700/50">
+                    <div className="flex flex-row items-center space-x-2 text-sm text-gray-500">
+                      <User className="w-4 h-4" />
+                      <span>{featuredArticle.author}</span>
                     </div>
-                    <Link 
-                      to={`/article/${featuredArticle.id}`}
-                      className="bg-gradient-to-r from-cyan-500 to-magenta-500 hover:from-cyan-600 hover:to-magenta-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 flex items-center shadow-lg hover:shadow-cyan-500/30 backdrop-blur-sm border border-cyan-500/30"
-                    >
-                      Read More
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </Link>
+                    
+                    <div className="flex flex-row justify-between items-center space-x-2 text-sm text-gray-500">
+                      <div className="flex flex-row justify-start items-center space-x-2 text-sm text-gray-500">
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatDate(featuredArticle.created_at)}</span>
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <Link 
+                        to={`/article/${featuredArticle.id}`}
+                        className="text-cyan-400 hover:text-cyan-300 font-medium text-sm flex items-center"
+                        >
+                          Read More
+                          <ChevronRight className="ml-1 h-4 w-4" />
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
