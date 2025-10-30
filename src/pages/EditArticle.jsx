@@ -40,8 +40,6 @@ const EditArticle = () => {
       // 首先尝试从localStorage获取
       const storedArticles = JSON.parse(localStorage.getItem('articles') || '[]')
       let foundArticle = storedArticles.find(a => a.id == id)
-      console.warn("EditArticle foundArticle:",foundArticle)
-      console.warn("EditArticle currentUser.id:",currentUser.id)
       if (foundArticle) {
         // 验证用户是否有权限编辑这篇文章
         if (currentUser.id !== foundArticle.user_id) {

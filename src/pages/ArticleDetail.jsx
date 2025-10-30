@@ -2,7 +2,18 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Calendar, User, Tag, ClipboardEdit, ArrowLeft, Trash2 } from 'lucide-react'
 import { supabase } from '../../supabase-config'
+import { commentService } from '../services/commentService'
 import Modal from '../components/Modal'
+import Prism from 'prismjs'
+import 'prismjs/components/prism-jsx.min.js'
+import 'prismjs/components/prism-javascript.min.js'
+import 'prismjs/components/prism-css.min.js'
+import 'prismjs/components/prism-python.min.js'
+import 'prismjs/components/prism-java.min.js'
+import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js'
+import 'prismjs/plugins/autoloader/prism-autoloader.min.js'
+import 'prismjs/themes/prism-tomorrow.min.css'
+import 'prismjs/plugins/line-numbers/prism-line-numbers.min.css'
 
 const ArticleDetail = () => {
   const { id } = useParams()
@@ -17,10 +28,6 @@ const ArticleDetail = () => {
     // 加载文章数据（分层存储架构）
     loadArticle()
     
-    // 加载评论数据
-    const storedComments = JSON.parse(localStorage.getItem('comments')) || {}
-    setComments(storedComments[id] || [])
-
     // 加载当前用户
     const user = JSON.parse(localStorage.getItem('currentUser'))
     setCurrentUser(user)
@@ -28,7 +35,7 @@ const ArticleDetail = () => {
 
   // 在文章内容更新后调用Prism.js进行代码高亮
   useEffect(() => {
-    if (window.Prism && window.Prism.highlightAll) {
+    if (Prism && Prism.highlightAll) {
       try {
         // 延迟执行以确保DOM已更新
         setTimeout(() => {
@@ -39,7 +46,7 @@ const ArticleDetail = () => {
           });
           
           // 执行代码高亮
-          window.Prism.highlightAll();
+          Prism.highlightAll();
         }, 100);
       } catch (error) {
         console.warn('Prism.js highlighting failed:', error);
@@ -49,7 +56,7 @@ const ArticleDetail = () => {
 
   // 在文章内容渲染后再次执行Prism.js高亮，确保高亮正确应用
   useEffect(() => {
-    if (article && window.Prism && window.Prism.highlightAll) {
+    if (article && Prism && Prism.highlightAll) {
       try {
         // 使用requestAnimationFrame确保DOM已更新
         const highlightCode = () => {
@@ -60,7 +67,7 @@ const ArticleDetail = () => {
           });
           
           // 执行代码高亮
-          window.Prism.highlightAll();
+          Prism.highlightAll();
         };
         
         // 在DOM更新后执行高亮
@@ -81,6 +88,14 @@ const ArticleDetail = () => {
       if (foundArticle) {
         // 如果localStorage中有数据，直接使用
         setArticle(foundArticle)
+        // 从comments表获取评论
+        try {
+          const articleComments = await commentService.getCommentsByArticleId(id);
+          setComments(articleComments);
+        } catch (commentError) {
+          console.warn('Failed to load comments from database, using empty array:', commentError);
+          setComments([]);
+        }
       } else {
         // 如果localStorage中没有数据，从Supabase获取
         const { data, error } = await supabase
@@ -94,6 +109,15 @@ const ArticleDetail = () => {
 
         // 设置状态并缓存到localStorage
         setArticle(data)
+        
+        // 从comments表获取评论
+        try {
+          const articleComments = await commentService.getCommentsByArticleId(id);
+          setComments(articleComments);
+        } catch (commentError) {
+          console.warn('Failed to load comments from database, using empty array:', commentError);
+          setComments([]);
+        }
         
         // 更新localStorage缓存
         const updatedArticles = [...storedArticles, data]
@@ -110,51 +134,29 @@ const ArticleDetail = () => {
 
   // 处理添加评论
   const handleAddComment = async (e) => {
-    e.preventDefault()
-    if (!newComment.trim() || !currentUser) return
-
-    const comment = {
-      id: Date.now() + Math.random(), // 生成唯一ID
-      article_id: article.id,
-      content: newComment,
-      user_id: currentUser.id,
-      created_at: new Date().toISOString() // 使用created_at而不是createdAt
-    }
+    e.preventDefault();
+    if (!newComment.trim() || !currentUser) return;
 
     try {
-      // 更新Supabase数据库
-      const { data: articleData, error } = await supabase
-        .from('articles')
-        .select('comments')
-        .eq('id', id)
-        .single()
-      
-      if (error) throw error
-      
-      const updatedComments = [...(articleData.comments || []), comment]
-      
-      const { error: updateError } = await supabase
-        .from('articles')
-        .update({ comments: updatedComments })
-        .eq('id', id)
-      
-      if (updateError) throw updateError
-      
-      // 更新评论状态
-      setComments(updatedComments)
-      
-      // 保存到localStorage
-      const storedComments = JSON.parse(localStorage.getItem('comments')) || {}
-      storedComments[id] = updatedComments
-      localStorage.setItem('comments', JSON.stringify(storedComments))
-      
-      // 清空输入框
-      setNewComment('')
+      // 准备评论数据
+      const commentData = {
+        content: newComment,
+        article_id: id,
+        user_id: currentUser?.id,
+        user_email: currentUser?.email
+      };
+
+      // 使用commentService保存评论到数据库
+      const savedComment = await commentService.addComment(commentData);
+
+      // 更新本地状态
+      setComments(prevComments => [savedComment, ...prevComments]);
+      setNewComment('');
     } catch (err) {
-      console.error('Error adding comment:', err)
-      alert('添加评论失败: ' + err.message)
+      console.error('Error adding comment:', err);
+      alert('添加评论失败: ' + err.message);
     }
-  }
+  };
 
   // 处理删除文章
   const handleDelete = async () => {
@@ -207,8 +209,7 @@ const ArticleDetail = () => {
       </div>
     )
   }
-  console.warn('Del Article:', article)
-  console.warn('Del Current User:', currentUser)
+
   return (
     <div className="min-h-screen bg-brand-dark pattern-grid pattern-cyan-400 pattern-bg-brand-dark pattern-opacity-10 pattern-size-20 bg-[length:40px_40px] py-4 sm:py-8">
       {/* 删除确认弹窗 */}
@@ -336,80 +337,80 @@ const ArticleDetail = () => {
                 Comments ({comments.length})
               </h2>
 
-            {/* Add Comment Form */}
-            {currentUser ? (
-              <div className="mb-8 relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-magenta-500/10 rounded-2xl blur-xl opacity-30 -z-10"></div>
-                <div className="relative bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 border border-cyan-500/20 rounded-2xl p-6 backdrop-blur-sm">
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Add a comment..."
-                    className="w-full p-4 bg-brand-dark-secondary/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 resize-none transition-all"
-                    rows="3"
-                  />
-                  <div className="flex justify-end mt-2">
-                    <button
-                      onClick={handleAddComment}
-                      disabled={!newComment.trim()}
-                      className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-magenta-500 hover:from-cyan-600 hover:to-magenta-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-cyan-500/30"
+              {/* Comments List */}
+              <div className="space-y-6">
+                {comments.map(comment => (
+                  <div key={comment.id} className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-magenta-500/10 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-300 -z-10"></div>
+                    <div className="relative bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 border border-cyan-500/20 rounded-2xl p-6 backdrop-blur-sm">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-magenta-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-semibold">
+                            {comment.author.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-white font-medium">{comment.author}</span>
+                          <span className="text-gray-500 text-sm ml-2">
+                            {new Date(comment.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-gray-300 pl-2 border-l-2 border-cyan-500/30">{comment.content}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {comments.length === 0 && (
+                  <div className="text-center py-8 relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-magenta-500/10 rounded-2xl blur-xl opacity-30 -z-10"></div>
+                    <div className="relative bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 border border-cyan-500/20 rounded-2xl p-6 backdrop-blur-sm">
+                      <p className="text-gray-500">No comments yet. Be the first to comment!</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Add Comment Form */}
+              {currentUser ? (
+                <form onSubmit={handleAddComment} className="mt-8 relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-magenta-500/10 rounded-2xl blur-xl opacity-30 -z-10"></div>
+                  <div className="relative bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 border border-cyan-500/20 rounded-2xl p-6 backdrop-blur-sm">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Add a comment..."
+                      className="w-full p-4 bg-brand-dark-secondary/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 resize-none transition-all"
+                      rows="3"
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button
+                        type="submit"
+                        disabled={!newComment.trim()}
+                        className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-magenta-500 hover:from-cyan-600 hover:to-magenta-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-cyan-500/30"
+                      >
+                        Post Comment
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <div className="text-center py-8 relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-magenta-500/10 rounded-2xl blur-xl opacity-30 -z-10"></div>
+                  <div className="relative bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 border border-cyan-500/20 rounded-2xl p-6 backdrop-blur-sm">
+                    <p className="text-gray-400 mb-4">Please log in to leave a comment</p>
+                    <Link
+                      to="/login"
+                      className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-magenta-500 hover:from-cyan-600 hover:to-magenta-600 text-white rounded-lg transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-cyan-500/30"
                     >
-                      Post Comment
-                    </button>
+                      Log In
+                    </Link>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-magenta-500/10 rounded-2xl blur-xl opacity-30 -z-10"></div>
-                <div className="relative bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 border border-cyan-500/20 rounded-2xl p-6 backdrop-blur-sm">
-                  <p className="text-gray-400 mb-4">Please log in to leave a comment</p>
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-magenta-500 hover:from-cyan-600 hover:to-magenta-600 text-white rounded-lg transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-cyan-500/30"
-                  >
-                    Log In
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Comments List */}
-          <div className="space-y-6">
-            {comments.map(comment => (
-              <div key={comment.id} className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-magenta-500/10 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-300 -z-10"></div>
-                <div className="relative bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 border border-cyan-500/20 rounded-2xl p-6 backdrop-blur-sm">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-magenta-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-semibold">
-                        {comment.author.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-white font-medium">{comment.author}</span>
-                      <span className="text-gray-500 text-sm ml-2">
-                        {new Date(comment.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-gray-300 pl-2 border-l-2 border-cyan-500/30">{comment.content}</p>
-                </div>
-              </div>
-            ))}
-
-            {comments.length === 0 && (
-              <div className="text-center py-8 relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-magenta-500/10 rounded-2xl blur-xl opacity-30 -z-10"></div>
-                <div className="relative bg-gradient-to-br from-cyan-500/10 to-magenta-500/10 border border-cyan-500/20 rounded-2xl p-6 backdrop-blur-sm">
-                  <p className="text-gray-500">No comments yet. Be the first to comment!</p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
     </div>
   )
 }

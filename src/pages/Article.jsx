@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Calendar, User, Tag, ChevronLeft, Edit, Trash2, MessageSquare } from 'lucide-react';
+import { Calendar, User, Tag, ChevronLeft, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '../../supabase-config';
 
 const Article = () => {
@@ -9,8 +9,6 @@ const Article = () => {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -31,8 +29,6 @@ const Article = () => {
       if (foundArticle) {
         // 如果localStorage中有数据，直接使用
         setArticle(foundArticle);
-        // 初始化评论
-        setComments(foundArticle.comments || []);
       } else {
         // 如果localStorage中没有数据，从Supabase获取
         const { data, error } = await supabase
@@ -46,7 +42,6 @@ const Article = () => {
 
         // 设置状态并缓存到localStorage
         setArticle(data);
-        setComments(data.comments || []);
         
         // 更新localStorage缓存
         const updatedArticles = [...storedArticles, data];
@@ -113,45 +108,6 @@ const Article = () => {
     }
   }
 
-  const handleAddComment = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim() || !currentUser) return;
-
-    const comment = {
-      id: Date.now() + Math.random(), // 生成唯一ID
-      content: newComment,
-      author: currentUser.username || currentUser.email,
-      created_at: new Date().toISOString()
-    };
-
-    const updatedComments = [comment, ...comments];
-    setComments(updatedComments);
-    setNewComment('');
-
-    try {
-      // 更新Supabase数据库中的文章评论
-      const { error } = await supabase
-        .from('articles')
-        .update({ comments: updatedComments })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      // 更新localStorage缓存
-      const storedArticles = JSON.parse(localStorage.getItem('articles')) || [];
-      const updatedArticles = storedArticles.map(article => {
-        if (article.id == id) {
-          return { ...article, comments: updatedComments };
-        }
-        return article;
-      });
-      localStorage.setItem('articles', JSON.stringify(updatedArticles));
-    } catch (err) {
-      console.error('Failed to save comment:', err);
-      alert('Failed to save comment: ' + err.message);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-brand-dark pattern-grid pattern-cyan-400 pattern-bg-brand-dark pattern-opacity-10 pattern-size-20 flex items-center justify-center">
@@ -210,8 +166,7 @@ const Article = () => {
       </div>
     );
   }
-  console.warn("Article:",article)
-  console.warn("currentUser:",currentUser)
+  
   return (
     <div className="min-h-screen bg-brand-dark pattern-grid pattern-cyan-400 pattern-bg-brand-dark pattern-opacity-10 pattern-size-20">
       {/* 添加渐变背景层 */}
@@ -298,78 +253,6 @@ const Article = () => {
             )}
           </div>
         </article>
-
-        {/* 评论区域 */}
-        <section className="mt-12 bg-gradient-to-br from-secondary/50 to-secondary/30 rounded-2xl border border-cyan-500/20 p-8 backdrop-blur-sm relative">
-          {/* 添加网格图案覆盖层 */}
-          <div className="absolute inset-0 pattern-grid pattern-cyan-400 pattern-bg-brand-dark pattern-opacity-5 pattern-size-20 pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center bg-gradient-to-r from-cyan-400 to-magenta-400 bg-clip-text text-transparent">
-              <MessageSquare className="mr-2 h-6 w-6" />
-              Comments ({comments.length})
-            </h2>
-
-            {/* 评论表单 */}
-            {currentUser ? (
-              <form onSubmit={handleAddComment} className="mb-8">
-                <div className="mb-4">
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Add a comment..."
-                    className="w-full bg-gray-800/50 border border-cyan-500/20 rounded-lg p-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none backdrop-blur-sm"
-                    rows="4"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={!newComment.trim()}
-                  className="bg-gradient-to-r from-cyan-500 to-magenta-500 hover:from-cyan-600 hover:to-magenta-600 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 backdrop-blur-sm border border-cyan-500/30"
-                >
-                  Post Comment
-                </button>
-              </form>
-            ) : (
-              <div className="mb-8 p-6 bg-gray-800/30 rounded-lg border border-cyan-500/20 backdrop-blur-sm">
-                <p className="text-gray-400">
-                  Please <Link to="/login" className="text-cyan-400 hover:text-cyan-300">log in</Link> to post a comment.
-                </p>
-              </div>
-            )}
-
-            {/* 评论列表 */}
-            <div className="space-y-6">
-              {comments.length > 0 ? (
-                comments.map((comment) => (
-                  <div key={comment.id} className="bg-gray-800/30 rounded-lg p-6 border border-cyan-500/20 backdrop-blur-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-magenta-500 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-white text-sm font-semibold">
-                            {comment.author.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-white">{comment.author}</h4>
-                          <p className="text-sm text-gray-400">
-                            {new Date(comment.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-gray-300">{comment.content}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 bg-gray-800/30 rounded-lg border border-cyan-500/20 backdrop-blur-sm">
-                  <MessageSquare className="mx-auto h-12 w-12 text-gray-600 mb-4" />
-                  <p className="text-gray-500">No comments yet. Be the first to comment!</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );
